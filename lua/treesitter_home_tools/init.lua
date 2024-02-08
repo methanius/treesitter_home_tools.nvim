@@ -19,20 +19,18 @@ M.toggle_next_bool = function()
   local filetype = vim.bo[vim.api.nvim_get_current_buf()].filetype
   local scope = vim.treesitter.get_node():tree():root()
   local ok, s_query = pcall(vim.treesitter.query.parse, filetype, "([(true) (false)]) @bools")
-  local jumped = false
   if ok == true then
-    for _, node, _ in s_query:iter_captures(scope, vim.api.nvim_get_current_buf(), 0, -1) do
+    for _, node, _ in
+      s_query:iter_captures(scope, vim.api.nvim_get_current_buf(), cursor_line - 1, -1)
+    do
       local node_end_line, node_end_col, _ = node:end_()
       if
-        jumped == false
-        and (
-          node_end_line + 1 > cursor_line
-          or (node_end_line + 1 == cursor_line and node_end_col > cursor_col)
-        )
+        node_end_line + 1 > cursor_line
+        or (node_end_line + 1 == cursor_line and node_end_col > cursor_col)
       then
-        jumped = true
         vim.api.nvim_win_set_cursor(0, { node_end_line + 1, node_end_col - 1 })
         toggle_bool_under_cursor()
+        break
       end
     end
   end
@@ -45,14 +43,14 @@ M.toggle_previous_bool = function()
   local ok, s_query = pcall(vim.treesitter.query.parse, filetype, "([(true) (false)]) @bools")
   if ok == true then
     local res_pos = nil
-    for _, node, _ in s_query:iter_captures(scope, vim.api.nvim_get_current_buf(), 0, -1) do
+    for _, node, _ in s_query:iter_captures(scope, vim.api.nvim_get_current_buf(), 0, cursor_line) do
       local node_start_line, node_start_col, _ = node:start()
       local node_end_line, node_end_col, _ = node:end_()
       if
         node_start_line + 1 < cursor_line
         or (node_start_line + 1 == cursor_line and node_start_col < cursor_col)
       then
-        res_pos = { node_end_line + 1, node_end_col -1}
+        res_pos = { node_end_line + 1, node_end_col - 1 }
       end
     end
     if res_pos ~= nil then
