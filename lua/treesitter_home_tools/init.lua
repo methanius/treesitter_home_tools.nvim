@@ -1,62 +1,25 @@
----@Class TreesitterHomeTools.Commands
+---@class (exact) TreesitterHomeTools.Commands
+---@field options TreesitterHomeTools.Config
+---@field toggle_next_bool function?
+---@field toggle_previous_bool function?
+---@field setup function
 local M = {}
 
-local toggle_bool_under_cursor = function()
-  local word = vim.fn.expand("<cword>")
-  if word == "true" then
-    vim.cmd("normal! m`ciwfalse")
-  elseif word == "false" then
-    vim.cmd("normal! m`ciwtrue")
-  elseif word == "True" then
-    vim.cmd("normal! m`ciwFalse")
-  elseif word == "False" then
-    vim.cmd("normal! m`ciwTrue")
-  end
-end
+---@class (exact) TreesitterHomeTools.Config
+---@field enable_toggle_boolean boolean
+local defaults = {
+  enable_toggle_boolean = true,
+}
 
-M.toggle_next_bool = function()
-  local cursor_line, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
-  local filetype = vim.bo[vim.api.nvim_get_current_buf()].filetype
-  local scope = vim.treesitter.get_node():tree():root()
-  local ok, s_query = pcall(vim.treesitter.query.parse, filetype, "([(true) (false)]) @bools")
-  if ok == true then
-    for _, node, _ in
-      s_query:iter_captures(scope, vim.api.nvim_get_current_buf(), cursor_line - 1, -1)
-    do
-      local node_end_line, node_end_col, _ = node:end_()
-      if
-        node_end_line + 1 > cursor_line
-        or (node_end_line + 1 == cursor_line and node_end_col > cursor_col)
-      then
-        vim.api.nvim_win_set_cursor(0, { node_end_line + 1, node_end_col - 1 })
-        toggle_bool_under_cursor()
-        break
-      end
-    end
-  end
-end
+M.options = defaults
 
-M.toggle_previous_bool = function()
-  local cursor_line, cursor_col = unpack(vim.api.nvim_win_get_cursor(0))
-  local filetype = vim.bo[vim.api.nvim_get_current_buf()].filetype
-  local scope = vim.treesitter.get_node():tree():root()
-  local ok, s_query = pcall(vim.treesitter.query.parse, filetype, "([(true) (false)]) @bools")
-  if ok == true then
-    local res_pos = nil
-    for _, node, _ in s_query:iter_captures(scope, vim.api.nvim_get_current_buf(), 0, cursor_line) do
-      local node_start_line, node_start_col, _ = node:start()
-      local node_end_line, node_end_col, _ = node:end_()
-      if
-        node_start_line + 1 < cursor_line
-        or (node_start_line + 1 == cursor_line and node_start_col < cursor_col)
-      then
-        res_pos = { node_end_line + 1, node_end_col - 1 }
-      end
-    end
-    if res_pos ~= nil then
-      vim.api.nvim_win_set_cursor(0, res_pos)
-      toggle_bool_under_cursor()
-    end
+---@param opts? TreesitterHomeTools.Config
+function M.setup(opts)
+  M.options = vim.tbl_deep_extend("force", {}, defaults, opts or {})
+  if M.options.enable_toggle_boolean then
+    local toggle_bool = require("treesitter_home_tools.toggle_bool")
+    M.toggle_next_bool = toggle_bool.toggle_next_bool
+    M.toggle_previous_bool = toggle_bool.toggle_previous_bool
   end
 end
 
