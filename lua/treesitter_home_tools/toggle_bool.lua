@@ -101,7 +101,7 @@ local get_previous_queried_node = function(opts)
 end
 
 ---@type TreesitterQuery
-local boolean_query = "([(true) (false)])@bools"
+local boolean_queries = { "([(true)(false)])@bools", "(boolean_scalar)@bools", "(boolean)@bools" }
 
 --- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
 --- @param include_current_word? boolean
@@ -109,17 +109,20 @@ function M.toggle_next_bool(include_current_word)
   if include_current_word == nil then
     include_current_word = true
   end
-  local node = get_next_queried_node({
-    query = boolean_query,
-    include_current = include_current_word,
-  })
-  if node ~= nil then
-    local node_end_row, node_end_col = node:end_()
-    local old_text_len = ts.get_node_text(node, 0):len()
-    vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 })
-    swap_bool_node_value(node)
-    local new_v_old_text_diff = ts.get_node_text(node, 0):len() - old_text_len
-    vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 + new_v_old_text_diff })
+  for _, boolean_query in pairs(boolean_queries) do
+    local node = get_next_queried_node({
+      query = boolean_query,
+      include_current = include_current_word,
+    })
+    if node ~= nil then
+      local node_end_row, node_end_col = node:end_()
+      local old_text_len = ts.get_node_text(node, 0):len()
+      vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 })
+      swap_bool_node_value(node)
+      local new_v_old_text_diff = ts.get_node_text(node, 0):len() - old_text_len
+      vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 + new_v_old_text_diff })
+      break
+    end
   end
 end
 
@@ -129,17 +132,20 @@ function M.toggle_previous_bool(include_current_word)
   if include_current_word == nil then
     include_current_word = true
   end
-  local node = get_previous_queried_node({
-    query = boolean_query,
-    include_current = include_current_word,
-  })
-  if node ~= nil then
-    local node_end_row, node_end_col = node:end_()
-    local old_text_len = ts.get_node_text(node, 0):len()
-    vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 })
-    swap_bool_node_value(node)
-    local new_v_old_text_diff = ts.get_node_text(node, 0):len() - old_text_len
-    vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 + new_v_old_text_diff })
+  for _, boolean_query in pairs(boolean_queries) do
+    local node = get_previous_queried_node({
+      query = boolean_query,
+      include_current = include_current_word,
+    })
+    if node ~= nil then
+      local node_end_row, node_end_col = node:end_()
+      local old_text_len = ts.get_node_text(node, 0):len()
+      vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 })
+      swap_bool_node_value(node)
+      local new_v_old_text_diff = ts.get_node_text(node, 0):len() - old_text_len
+      vim.api.nvim_win_set_cursor(0, { node_end_row + 1, node_end_col - 1 + new_v_old_text_diff })
+      break
+    end
   end
 end
 
