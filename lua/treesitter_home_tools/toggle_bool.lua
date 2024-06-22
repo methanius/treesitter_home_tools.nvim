@@ -106,6 +106,7 @@ local boolean_queries = {
   "(boolean_scalar)@bools",
   "(boolean)@bools",
   "(boolean_literal)@bools",
+  '((constructor)@bools (#any-of? @bools "True" "False"))',
 }
 
 --- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
