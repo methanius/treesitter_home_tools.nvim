@@ -101,7 +101,12 @@ local get_previous_queried_node = function(opts)
 end
 
 ---@type TreesitterQuery
-local boolean_queries = { "([(true)(false)])@bools", "(boolean_scalar)@bools", "(boolean)@bools" }
+local boolean_queries = {
+  "([(true)(false)])@bools",
+  "(boolean_scalar)@bools",
+  "(boolean)@bools",
+  "(boolean_literal)@bools",
+}
 
 --- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
 --- @param include_current_word? boolean
