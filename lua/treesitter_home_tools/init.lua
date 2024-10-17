@@ -24,9 +24,9 @@ function M.setup(opts)
     M.toggle_next_bool = toggle_bool.toggle_next_bool
     M.toggle_previous_bool = toggle_bool.toggle_previous_bool
     if M.options.create_usercommands then
-      vim.api.nvim_create_user_command("ToggleNextBool", require("treesitter_home_tools").toggle_bool.toggle_next_bool,
+      vim.api.nvim_create_user_command("ToggleNextBool", require("treesitter_home_tools").toggle_next_bool,
         { bar = true, desc = "Toggles next boolean using Treesitter" })
-      vim.api.nvim_create_user_command("TogglePreviousBool", require("treesitter_home_tools").toggle_bool.toggle_previous_bool,
+      vim.api.nvim_create_user_command("TogglePreviousBool", require("treesitter_home_tools").toggle_previous_bool,
         { bar = true, desc = "Toggles previous boolean using Treesitter" })
     end
   end
