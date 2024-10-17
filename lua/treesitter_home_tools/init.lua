@@ -8,8 +8,10 @@ local M = {}
 
 ---@class (exact) TreesitterHomeTools.Config
 ---@field enable_toggle_boolean boolean
+---@field create_usercommands boolean
 local defaults = {
   enable_toggle_boolean = true,
+  create_usercommands = true,
 }
 
 M.options = defaults
@@ -19,11 +21,14 @@ function M.setup(opts)
   M.options = vim.tbl_deep_extend("force", {}, defaults, opts or {})
   if M.options.enable_toggle_boolean then
     local toggle_bool = require("treesitter_home_tools.toggle_bool")
-    vim.api.nvim_create_user_command("ToggleNextBool", function()
-      toggle_bool.toggle_next_bool()
-    end, { bar = true, bang = true, nargs = "?", desc = "Toggles next boolean using Treesitter" })
     M.toggle_next_bool = toggle_bool.toggle_next_bool
     M.toggle_previous_bool = toggle_bool.toggle_previous_bool
+    if M.options.create_usercommands then
+      vim.api.nvim_create_user_command("ToggleNextBool", require("treesitter_home_tools").toggle_bool.toggle_next_bool,
+        { bar = true, desc = "Toggles next boolean using Treesitter" })
+      vim.api.nvim_create_user_command("TogglePreviousBool", require("treesitter_home_tools").toggle_bool.toggle_previous_bool,
+        { bar = true, desc = "Toggles previous boolean using Treesitter" })
+    end
   end
 end
 
