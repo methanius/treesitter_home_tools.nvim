@@ -6,8 +6,13 @@ repos:
   - repo: local
     hooks:
       - id: alejandra
-        name: alejandra
+        name: Alejandra
         language: system
         entry: alejandra
         types: [nix]
-
+      - id: stylua
+        name: StyLua
+        language: system
+        entry: stylua
+        args: [--respect-ignores]
+        types: [lua]

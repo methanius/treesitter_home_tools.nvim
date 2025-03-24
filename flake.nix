@@ -22,6 +22,7 @@
           mkShell {
             buildInputs = [
               pre-commit
+              stylua
               # luacheck
               alejandra
               stylua
