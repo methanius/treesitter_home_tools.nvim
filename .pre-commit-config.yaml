@@ -1,9 +1,13 @@
 repos:
-  - repo: https://github.com/kamadorueda/alejandra
-    rev: 3.1.0
-    hooks:
-      - id: alejandra-system
   - repo: https://github.com/Calinou/pre-commit-luacheck
     rev: v1.0.0
     hooks:
       - id: luacheck
+  - repo: local
+    hooks:
+      - id: alejandra
+        name: alejandra
+        language: system
+        entry: alejandra
+        types: [nix]
+
