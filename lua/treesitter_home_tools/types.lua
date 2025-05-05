@@ -5,7 +5,6 @@
 ---@field integer_query TreesitterQuery?
 
 ---@class SearchOpts
----@field query TreesitterQuery
 ---@field include_current boolean
 
 ---@class (exact) TreesitterHomeTools.Config

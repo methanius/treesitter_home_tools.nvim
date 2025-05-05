@@ -1,0 +1,1 @@
+((integer)@integer_literal)

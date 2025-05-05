@@ -1,6 +1,6 @@
 local ts = vim.treesitter
-local langs_queries = require("treesitter_home_tools.langs_queries")
 local search = require("treesitter_home_tools.search")
+local goto_node = require("treesitter_home_tools.goto_node").goto_node
 local M = {}
 
 ---@param int_string string Integer string from integer Treesitter node
@@ -62,21 +62,24 @@ function M.increment_next_integer(inc)
   end
   local tree = parser:parse(true)[1]
   if not parser:is_valid() then
-    vim.notify("Parser currently invalid!")
+    tree = parser:parse()[1]
+  else
+    tree = parser:trees()[1]
+  end
+  local integer_query = ts.query.get(vim.bo.filetype, "integer_literal")
+  if integer_query == nil then
+    vim.notify("No integer literal query found for " .. vim.bo.filetype .. "!")
     return
   end
-  local int_node = search.get_next_queried_node(
-    tree,
-    { query = langs_queries[vim.bo.filetype].integer_query, include_current = true }
-  )
+  local int_node = search.get_next_queried_node(tree, integer_query, { include_current = true })
   if int_node == nil then
     vim.notify("No integer node found ahead.")
     return
   end
+  goto_node(int_node, false, true)
   increment_integer_node(int_node, inc)
-  local start_row, start_col, _ = int_node:start()
-  vim.api.nvim_win_set_cursor(0, { start_row + 1, start_col - 1 })
-  vim.api.nvim_feedkeys("e", "n", true)
+  parser:parse()
+  goto_node(int_node, true, false)
 end
 
 return M

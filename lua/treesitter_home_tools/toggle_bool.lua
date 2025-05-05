@@ -1,6 +1,6 @@
 local ts = vim.treesitter
-local lang_queries = require("treesitter_home_tools.langs_queries")
 local search = require("treesitter_home_tools.search")
+local goto_node = require("treesitter_home_tools.goto_node").goto_node
 
 local M = {}
 
@@ -26,9 +26,9 @@ local swap_bool_node_value = function(node)
   end
 end
 
---- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
+---@param search_type "next" | "prev" Which direction to search in
 --- @param include_current_word? boolean
-function M.toggle_next_bool(include_current_word)
+local function toggle_searched_bool(search_type, include_current_word)
   if include_current_word == nil then
     include_current_word = true
   end
@@ -36,46 +36,68 @@ function M.toggle_next_bool(include_current_word)
   if parser == nil then
     return
   end
-  local tree = parser:parse()[1]
-  local node = search.get_next_queried_node(tree, {
-    query = lang_queries[vim.bo.filetype].bool_query,
-    include_current = include_current_word,
-  })
-  if node ~= nil then
-    swap_bool_node_value(node)
-    local initial_bool_text = ts.get_node_text(node, 0)
-    local og_end_row, og_end_col, _ = node:end_()
-    local end_adjust = initial_bool_text:len() == 4 and 1 or -1
-    vim.api.nvim_win_set_cursor(0, { og_end_row + 1, og_end_col - 1 + end_adjust })
+
+  ---@type TSTree
+  local tree
+  if not parser:is_valid() then
+    tree = parser:parse()[1]
   else
-    vim.notify("No boolean found!")
+    tree = parser:trees()[1]
   end
+  local lang = vim.bo.filetype
+  local boolean_query = ts.query.get(lang, "boolean_literal")
+  if boolean_query == nil then
+    vim.notify("No boolean query found for " .. lang .. "!")
+    return
+  end
+  ---@type TSNode?
+  local node
+  if search_type == "next" then
+    node = search.get_next_queried_node(tree, boolean_query, {
+      include_current = include_current_word,
+    })
+    if node == nil then
+      vim.notify("No boolean node found ahead.")
+      return
+    end
+  elseif search_type == "prev" then
+    node = search.get_previous_queried_node(tree, boolean_query, {
+      include_current = include_current_word,
+    })
+    if node == nil then
+      vim.notify("No previous boolean found.")
+      return
+    end
+  end
+  if node == nil then
+    vim.notify(
+      "All possible node states should have been handled here?!",
+      vim.diagnostic.severity.ERROR
+    )
+    return
+  end
+  goto_node(node, false, true)
+  swap_bool_node_value(node)
+  --Reparse for goto_node to work on updated node
+  parser:parse()
+  local new_node = ts.get_node()
+  if new_node == nil then
+    vim.notify("No new node after bool toggle!?")
+    return
+  end
+  goto_node(new_node, true, false)
+end
+
+--- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
+--- @param include_current_word? boolean
+function M.toggle_next_bool(include_current_word)
+  toggle_searched_bool("next", include_current_word)
 end
 
 --- Jumps to previous boolean and switches its value. If no boolean is found, it does nothing
 --- @param include_current_word? boolean
 function M.toggle_previous_bool(include_current_word)
-  if include_current_word == nil then
-    include_current_word = true
-  end
-  local parser = ts.get_parser()
-  if parser == nil then
-    return
-  end
-  local tree = parser:parse()[1]
-  local node = search.get_previous_queried_node(tree, {
-    query = lang_queries[vim.bo.filetype].bool_query,
-    include_current = include_current_word,
-  })
-  if node ~= nil then
-    swap_bool_node_value(node)
-    local initial_bool_text = ts.get_node_text(node, 0)
-    local og_end_row, og_end_col, _ = node:end_()
-    local end_adjust = initial_bool_text:len() == 4 and 1 or -1
-    vim.api.nvim_win_set_cursor(0, { og_end_row + 1, og_end_col - 1 + end_adjust })
-  else
-    vim.notify("No boolean found!")
-  end
+  toggle_searched_bool("prev", include_current_word)
 end
 
 return M
