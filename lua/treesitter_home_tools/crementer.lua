@@ -13,7 +13,7 @@ local parse_integer_string = function(int_string)
     if tonumber(c) then
       parsed_int_text = parsed_int_text .. c
     else
-      separator_table[index] = c
+      separator_table[#separator_table + 1] = { index, c }
     end
     index = index + 1
   end
@@ -27,27 +27,51 @@ end
 ---@param int_node TSNode
 ---@param inc integer
 local increment_integer_node = function(int_node, inc)
-  local parsed_int, separator_table =
-    parse_integer_string(ts.get_node_text(int_node, vim.api.nvim_get_current_buf()))
+  --- Coordinate sets are as follows:
+  ---     Start formatted number example: 1_2_31_51
+  ---                                     123456789
+  ---                                     1 2 34 56
+  ---
+  ---     gives:
+  ---     {123151, {{2, "_"}, {5, "_"}}}
+  ---
+  ---     We have three relevant sets of coordiantes:
+  ---       Formated with separators
+  ---       Raw numbers before and after.
+  ---
+  local start_text = ts.get_node_text(int_node, vim.api.nvim_get_current_buf())
+  local parsed_int, separator_table = parse_integer_string(start_text)
   if parsed_int == nil then
     vim.notify("Couldn't parse integer node text to int?!")
   end
-  local new_number_string = tostring(parsed_int + inc)
+  local old_number_string = tostring(parsed_int)
+  local new_number = parsed_int + inc
+  local new_number_string = tostring(new_number)
   local result_integer_text = ""
   if separator_table == nil or vim.tbl_isempty(separator_table) then
     result_integer_text = result_integer_text .. new_number_string
   else
     local inserted = 0
-    local previous_index = 1
-    for sep_index, separator in pairs(separator_table) do
-      result_integer_text = result_integer_text
-        .. new_number_string:sub(previous_index - inserted, sep_index - inserted - 1)
-        .. separator
-      inserted = inserted + 1
-      previous_index = sep_index + 1
+    local insert_stop = #new_number_string
+    local insert_start = #new_number_string
+      - (#start_text - separator_table[#separator_table][1] - 1)
+    result_integer_text = separator_table[#separator_table][2]
+      .. new_number_string:sub(insert_start, insert_stop)
+
+    insert_stop = insert_start - 1
+    for i = 2, #separator_table, 1 do
+      local insert_len = separator_table[#separator_table - i + 2][1]
+        - separator_table[#separator_table - i + 1][1]
+        - 1
+      insert_start = insert_stop - insert_len + 1
+      result_integer_text = separator_table[#separator_table - i + 1][2]
+        .. new_number_string:sub(insert_start, insert_stop)
+        .. result_integer_text
+      insert_stop = insert_start - 1
     end
-    result_integer_text = result_integer_text
-      .. new_number_string:sub(previous_index - inserted, #new_number_string)
+    insert_start = 1
+    insert_stop = separator_table[1][1] - 1 + (#new_number_string - #old_number_string)
+    result_integer_text = new_number_string:sub(insert_start, insert_stop) .. result_integer_text
   end
   local start_row, start_col, end_row, end_col = int_node:range()
   vim.api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, { result_integer_text })
