@@ -4,7 +4,7 @@ local goto_node = require("treesitter_home_tools.goto_node").goto_node
 local M = {}
 
 ---@param int_string string number string from integer Treesitter node
----@return number | nil, table<integer, string> |nil
+---@return number | nil, table<integer, string>
 local function parse_integer_string(int_string)
   local parsed_int_text = ""
   local separator_table = {}
@@ -19,7 +19,7 @@ local function parse_integer_string(int_string)
   end
   local parsed_int = tonumber(parsed_int_text)
   if parsed_int == nil then
-    return
+    error("The parsed int string could not be type cast to number by lua?!")
   end
   return parsed_int, separator_table
 end
@@ -29,12 +29,9 @@ end
 ---@return string
 local function increment_integer_string(int_string, inc)
   local parsed_int, separator_table = parse_integer_string(int_string)
-  if parsed_int == nil then
-    vim.notify("Couldn't parse integer node text to int?!")
-  end
   local new_number = parsed_int + inc
   local rev_new_number_string = tostring(new_number):reverse()
-  if separator_table == nil or vim.tbl_isempty(separator_table) then
+  if vim.tbl_isempty(separator_table) then
     return tostring(new_number)
   end
   return vim.iter(separator_table):rev():fold(rev_new_number_string, function(acc, k)
