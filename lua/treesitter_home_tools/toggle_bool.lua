@@ -7,7 +7,7 @@ local M = {}
 local _boolean_replacement_candidates = { t = "false", f = "true", T = "False", F = "True" }
 ---Toggles bool under cursor by going into insert mode
 ---@param node TSNode
-local swap_bool_node_value = function(node)
+local function swap_boolean_literal_node_value(node)
   local replacement = _boolean_replacement_candidates[ts.get_node_text(
     node,
     vim.api.nvim_get_current_buf()
@@ -28,7 +28,7 @@ end
 
 ---@param search_type "next" | "prev" Which direction to search in
 --- @param include_current_word? boolean
-local function toggle_searched_bool(search_type, include_current_word)
+local function toggle_searched_boolean_literal(search_type, include_current_word)
   if include_current_word == nil then
     include_current_word = true
   end
@@ -45,15 +45,15 @@ local function toggle_searched_bool(search_type, include_current_word)
     tree = parser:trees()[1]
   end
   local lang = vim.bo.filetype
-  local boolean_query = ts.query.get(lang, "boolean_literal")
-  if boolean_query == nil then
+  local boolean_literal_query = ts.query.get(lang, "boolean_literal")
+  if boolean_literal_query == nil then
     vim.notify("No boolean query found for " .. lang .. "!")
     return
   end
   ---@type TSNode?
   local node
   if search_type == "next" then
-    node = search.get_next_queried_node(tree, boolean_query, {
+    node = search.get_next_queried_node(tree, boolean_literal_query, {
       include_current = include_current_word,
     })
     if node == nil then
@@ -61,7 +61,7 @@ local function toggle_searched_bool(search_type, include_current_word)
       return
     end
   elseif search_type == "prev" then
-    node = search.get_previous_queried_node(tree, boolean_query, {
+    node = search.get_previous_queried_node(tree, boolean_literal_query, {
       include_current = include_current_word,
     })
     if node == nil then
@@ -77,7 +77,7 @@ local function toggle_searched_bool(search_type, include_current_word)
     return
   end
   goto_node(node, false, true)
-  swap_bool_node_value(node)
+  swap_boolean_literal_node_value(node)
   --Reparse for goto_node to work on updated node
   parser:parse()
   local new_node = ts.get_node()
@@ -91,13 +91,13 @@ end
 --- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
 --- @param include_current_word? boolean
 function M.toggle_next_bool(include_current_word)
-  toggle_searched_bool("next", include_current_word)
+  toggle_searched_boolean_literal("next", include_current_word)
 end
 
 --- Jumps to previous boolean and switches its value. If no boolean is found, it does nothing
 --- @param include_current_word? boolean
 function M.toggle_previous_bool(include_current_word)
-  toggle_searched_bool("prev", include_current_word)
+  toggle_searched_boolean_literal("prev", include_current_word)
 end
 
 return M
