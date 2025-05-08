@@ -34,9 +34,16 @@ local function increment_integer_string(int_string, inc)
   if vim.tbl_isempty(separator_table) then
     return tostring(new_number)
   end
-  return vim.iter(separator_table):rev():fold(rev_new_number_string, function(acc, k)
-    local index, sep = unpack(k)
-    return acc:sub(1,index) .. sep .. acc:sub(index+1, #acc)
+  return vim
+    .iter(separator_table)
+    :rev()
+    :fold(rev_new_number_string, function(acc, k)
+      local index, sep = unpack(k)
+      return acc:sub(1, index) .. sep .. acc:sub(index + 1, #acc)
+    end)
+    :reverse()
+end
+
 ---@param int_string string
 ---@param decrement number
 ---@return string
@@ -52,7 +59,7 @@ local function decrement_integer_string(int_string, decrement)
   then
     return tostring(new_int)
   end
-  ):reverse()
+
   local new_int_string = tostring(parsed_int - decrement):reverse()
   return vim
     .iter(separator_table)
@@ -87,9 +94,15 @@ end
 local function increment_integer_node(int_node, inc)
   local start_text = ts.get_node_text(int_node, 0)
   local start_row, start_col, end_row, end_col = int_node:range()
-  vim.api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, { increment_integer_string(start_text, inc) })
+  vim.api.nvim_buf_set_text(
+    0,
+    start_row,
+    start_col,
+    end_row,
+    end_col,
+    { increment_integer_string(start_text, inc) }
+  )
 end
-
 
 ---@param parser vim.treesitter.LanguageTree
 ---@return TSNode?
