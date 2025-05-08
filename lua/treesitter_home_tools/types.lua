@@ -9,5 +9,4 @@
 
 ---@class (exact) TreesitterHomeTools.Config
 ---@field enable_toggle_boolean boolean
----@field enable_increment boolean
 ---@field create_usercommands boolean

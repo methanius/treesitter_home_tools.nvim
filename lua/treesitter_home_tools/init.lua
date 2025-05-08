@@ -4,7 +4,6 @@ local M = {}
 local defaults = {
   enable_toggle_boolean = true,
   create_usercommands = true,
-  enable_increment = true,
 }
 
 M.options = defaults
@@ -29,10 +28,8 @@ function M.setup(opts)
       )
     end
   end
-  if M.options.enable_increment then
-    local crementer = require("treesitter_home_tools.crementer")
-    M.increment_next_integer = crementer.increment_next_integer
-  end
+  local crementer = require("treesitter_home_tools.crementer")
+  M.increment_next_integer = crementer.increment_next_integer
   M.decrement_next_integer = crementer.decrement_next_integer
 end
 
