@@ -1,5 +1,3 @@
-local ts = vim.treesitter
-
 local M = {}
 ---Find the next node result from query input.
 ---If standing on a node result, get the last position of it
