@@ -33,6 +33,7 @@ function M.setup(opts)
     local crementer = require("treesitter_home_tools.crementer")
     M.increment_next_integer = crementer.increment_next_integer
   end
+  M.decrement_next_integer = crementer.decrement_next_integer
 end
 
 return M

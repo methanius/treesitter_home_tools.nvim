@@ -37,8 +37,49 @@ local function increment_integer_string(int_string, inc)
   return vim.iter(separator_table):rev():fold(rev_new_number_string, function(acc, k)
     local index, sep = unpack(k)
     return acc:sub(1,index) .. sep .. acc:sub(index+1, #acc)
+---@param int_string string
+---@param decrement number
+---@return string
+local function decrement_integer_string(int_string, decrement)
+  local parsed_int, separator_table = parse_integer_string(int_string)
+  local new_int = parsed_int - decrement
+  if
+    vim.tbl_isempty(separator_table)
+    -- Since we only ever subtract possible nubmers,
+    -- the only "crossover" of long numbers to roughly as long numbers
+    -- are on the positive to negative edge
+    or (parsed_int > 0 and new_int < 0)
+  then
+    return tostring(new_int)
   end
   ):reverse()
+  local new_int_string = tostring(parsed_int - decrement):reverse()
+  return vim
+    .iter(separator_table)
+    :rev()
+    :filter(function(k)
+      return k[1] < #new_int_string
+    end)
+    :fold(new_int_string, function(acc, k)
+      local index, sep = unpack(k)
+      return acc:sub(1, index) .. sep .. acc:sub(index + 1, #acc)
+    end)
+    :reverse()
+end
+
+---@param int_node TSNode
+---@param decrement number
+local function decrement_integer_node(int_node, decrement)
+  local start_text = ts.get_node_text(int_node, 0)
+  local start_row, start_col, end_row, end_col = int_node:range()
+  vim.api.nvim_buf_set_text(
+    0,
+    start_row,
+    start_col,
+    end_row,
+    end_col,
+    { decrement_integer_string(start_text, decrement) }
+  )
 end
 
 ---@param int_node TSNode
@@ -89,6 +130,23 @@ function M.increment_next_integer(inc)
   end
   goto_node(int_node, false, true)
   increment_integer_node(int_node, inc)
+  parser:parse()
+  goto_node(int_node, true, false)
+end
+
+---Decrements next boolean despite language extra formatting choices, powered by Treesitter
+---@param inc number Nice to get from vim.v.count1
+function M.decrement_next_integer(inc)
+  local parser, _ = ts.get_parser()
+  if parser == nil then
+    error("No Treesitter parser could be found?")
+  end
+  local int_node = find_next_integer_node(parser)
+  if int_node == nil then
+    return
+  end
+  goto_node(int_node, false, true)
+  decrement_integer_node(int_node, inc)
   parser:parse()
   goto_node(int_node, true, false)
 end
