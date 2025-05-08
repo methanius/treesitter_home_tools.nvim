@@ -9,11 +9,11 @@ local function parse_integer_string(int_string)
   local parsed_int_text = ""
   local separator_table = {}
   local index = 1
-  for c in int_string:gmatch(".") do
+  for c in int_string:reverse():gmatch(".") do
     if tonumber(c) then
-      parsed_int_text = parsed_int_text .. c
+      parsed_int_text = c .. parsed_int_text
     else
-      separator_table[#separator_table + 1] = { index, c }
+      separator_table[#separator_table + 1] = { index - #separator_table - 1, c }
     end
     index = index + 1
   end
@@ -32,35 +32,16 @@ local function increment_integer_string(int_string, inc)
   if parsed_int == nil then
     vim.notify("Couldn't parse integer node text to int?!")
   end
-  local old_number_string = tostring(parsed_int)
   local new_number = parsed_int + inc
-  local new_number_string = tostring(new_number)
-  local result_integer_text = ""
+  local rev_new_number_string = tostring(new_number):reverse()
   if separator_table == nil or vim.tbl_isempty(separator_table) then
-    result_integer_text = result_integer_text .. new_number_string
-  else
-    local insert_stop = #new_number_string
-    local insert_start = #new_number_string
-        - (#int_string - separator_table[#separator_table][1] - 1)
-    result_integer_text = separator_table[#separator_table][2]
-        .. new_number_string:sub(insert_start, insert_stop)
-
-    insert_stop = insert_start - 1
-    for i = 2, #separator_table, 1 do
-      local insert_len = separator_table[#separator_table - i + 2][1]
-          - separator_table[#separator_table - i + 1][1]
-          - 1
-      insert_start = insert_stop - insert_len + 1
-      result_integer_text = separator_table[#separator_table - i + 1][2]
-          .. new_number_string:sub(insert_start, insert_stop)
-          .. result_integer_text
-      insert_stop = insert_start - 1
-    end
-    insert_start = 1
-    insert_stop = separator_table[1][1] - 1 + (#new_number_string - #old_number_string)
-    result_integer_text = new_number_string:sub(insert_start, insert_stop) .. result_integer_text
+    return tostring(new_number)
   end
-  return result_integer_text
+  return vim.iter(separator_table):rev():fold(rev_new_number_string, function(acc, k)
+    local index, sep = unpack(k)
+    return acc:sub(1,index) .. sep .. acc:sub(index+1, #acc)
+  end
+  ):reverse()
 end
 
 ---@param int_node TSNode
