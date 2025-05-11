@@ -28,7 +28,7 @@ function M.setup(opts)
       )
     end
   end
-  local crementer = require("treesitter_home_tools.crementer")
+  local crementer = require("treesitter_home_tools.integer_crementers")
   M.increment_next_integer = crementer.increment_next_integer
   M.decrement_next_integer = crementer.decrement_next_integer
 end
