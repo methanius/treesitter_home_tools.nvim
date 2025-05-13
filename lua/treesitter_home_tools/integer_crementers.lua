@@ -24,10 +24,11 @@ local function parse_integer_string(int_string)
   return parsed_int, separator_table
 end
 
+---Increment string representing an integer, taking into account previously placed language specific delimiters
 ---@param int_string string
 ---@param inc number
 ---@return string
-local function increment_integer_string(int_string, inc)
+function M.increment_integer_string(int_string, inc)
   local parsed_int, separator_table = parse_integer_string(int_string)
   local new_number = parsed_int + inc
   local rev_new_number_string = tostring(new_number):reverse()
@@ -100,7 +101,7 @@ local function increment_integer_node(int_node, inc)
     start_col,
     end_row,
     end_col,
-    { increment_integer_string(start_text, inc) }
+    { M.increment_integer_string(start_text, inc) }
   )
 end
 
