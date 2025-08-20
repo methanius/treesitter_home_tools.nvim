@@ -12,7 +12,7 @@ local function swap_boolean_literal_node_value(node)
     node,
     vim.api.nvim_get_current_buf()
   )
-    :sub(1, 1)]
+  :sub(1, 1)]
   if replacement ~= nil then
     local start_row, start_col, end_row, end_col = node:range()
     vim.api.nvim_buf_set_text(
@@ -27,11 +27,7 @@ local function swap_boolean_literal_node_value(node)
 end
 
 ---@param search_type "next" | "prev" Which direction to search in
---- @param include_current_word? boolean
-local function toggle_searched_boolean_literal(search_type, include_current_word)
-  if include_current_word == nil then
-    include_current_word = true
-  end
+local function toggle_searched_boolean_literal(search_type)
   local parser = ts.get_parser()
   if parser == nil then
     return
@@ -53,17 +49,13 @@ local function toggle_searched_boolean_literal(search_type, include_current_word
   ---@type TSNode?
   local node
   if search_type == "next" then
-    node = search.get_next_queried_node(tree, boolean_literal_query, {
-      include_current = include_current_word,
-    })
+    node = search.get_next_queried_node(tree, boolean_literal_query)
     if node == nil then
       vim.notify("No boolean node found ahead.")
       return
     end
   elseif search_type == "prev" then
-    node = search.get_previous_queried_node(tree, boolean_literal_query, {
-      include_current = include_current_word,
-    })
+    node = search.get_previous_queried_node(tree, boolean_literal_query)
     if node == nil then
       vim.notify("No previous boolean found.")
       return
@@ -89,15 +81,13 @@ local function toggle_searched_boolean_literal(search_type, include_current_word
 end
 
 --- Jumps to next boolean and switches its value. If no boolean is found, it does nothing
---- @param include_current_word? boolean
-function M.toggle_next_bool(include_current_word)
-  toggle_searched_boolean_literal("next", include_current_word)
+function M.toggle_next_bool()
+  toggle_searched_boolean_literal("next")
 end
 
 --- Jumps to previous boolean and switches its value. If no boolean is found, it does nothing
---- @param include_current_word? boolean
-function M.toggle_previous_bool(include_current_word)
-  toggle_searched_boolean_literal("prev", include_current_word)
+function M.toggle_previous_bool()
+  toggle_searched_boolean_literal("prev")
 end
 
 return M

@@ -122,7 +122,7 @@ local function find_next_integer_node(parser)
     vim.notify("No integer literal query found for " .. vim.bo.filetype .. "!")
     return
   end
-  local int_node = search.get_next_queried_node(tree, integer_query, { include_current = true })
+  local int_node = search.get_next_queried_node(tree, integer_query)
   if int_node == nil then
     vim.notify("No integer literal node found ahead.")
     return
